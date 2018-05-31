@@ -1,7 +1,5 @@
 package com.shaposhnikov.michail.health;
 
-import com.shaposhnikov.michail.core.FourFuncCalculatorResource;
-
 import java.util.Arrays;
 import java.util.List;
 
