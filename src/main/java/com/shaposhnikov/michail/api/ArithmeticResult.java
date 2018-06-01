@@ -38,9 +38,9 @@ public class ArithmeticResult {
         return new ArithmeticResult(id,result);
     }
 
-//    public static ArithmeticResult generateErroredResult(long id, List<String> errors) {
-//        return new ArithmeticResult(id,errors);
-//    }
+    public static ArithmeticResult generateErroredResult(long id, List<String> errors) {
+        return new ArithmeticResult(id,errors);
+    }
 
     @JsonProperty
     public long getId() {

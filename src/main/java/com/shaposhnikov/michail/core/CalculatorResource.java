@@ -14,6 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -22,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CalculatorResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CalculatorResource.class);
-    private static final String SUPPORTED_OPERATIONS = "add|sub|mul|div|sqrt|pow";
+    private static final List<String> SUPPORTED_OPERATIONS = Arrays.asList(new String[]{"add","sub","mul","div","sqrt","pow"});
 
 
     protected final AtomicLong counter;
@@ -40,23 +41,14 @@ public class CalculatorResource {
     @Path ("{operation: (add|sub|mul|div|sqrt|pow)}")
     @Timed
     public ArithmeticResult operation(@QueryParam ("val") List<String> values, @PathParam ("operation") String operationParam) {
+        this.errors.clear();
 
         List<Double> numbers = verify(values);
-
-        if(this.errors.size() == 0){
+        if(this.errors.size() == 0 ){
             return calculatorService.applyOperationTo(this.counter.getAndIncrement(),numbers,operationParam);
-        } else {
-            String err = this.errors.remove(0);
-            return ArithmeticResult.generateErroredResult(this.counter.getAndIncrement(),err);
         }
+        return ArithmeticResult.generateErroredResult(this.counter.getAndIncrement(),this.errors);
     }
-
-//    @GET
-//    @Path("{default: .*}")
-//    public ArithmeticResult defaultMethod() {
-//        // Return a helpful error if user does not know which operations to try
-//        return ArithmeticResult.generateErroredResult(this.counter.get(),"Could not find that operation. Try /" + SUPPORTED_OPERATIONS);
-//    }
 
     private List<Double> verify(List<String> values){
         List<Double> numbers = new ArrayList<>();
@@ -65,11 +57,12 @@ public class CalculatorResource {
                 double number = Double.parseDouble(value);
                 numbers.add(number);
             }
-        } catch (Exception e){
-            LOGGER.error("error: " + e.getMessage());
-            this.errors.add(e.getMessage());
+        } catch (NumberFormatException e){
+            String err = "Sorry, we couldn't find a valid numerical representation " + e.getMessage().toLowerCase();
+            LOGGER.error(err);
+            this.errors.add(err);
         }
-        if(numbers == null){
+        if(numbers.isEmpty()){
             this.errors.add("No values to operate on. Try adding values like /calculator/add?val=1&val=2");
         }
         return numbers;
