@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Path("/calculator")
 @Produces (MediaType.APPLICATION_JSON)
@@ -41,32 +42,10 @@ public class CalculatorResource {
     @Path ("{operation: (add|sub|mul|div|sqrt|pow)}")
     @Timed
     public ArithmeticResult operation(@QueryParam ("val") List<String> values, @PathParam ("operation") String operationParam) {
-        this.errors.clear();
 
-        List<Double> numbers = verify(values);
-        if(this.errors.size() == 0 ){
-            return calculatorService.applyOperationTo(this.counter.getAndIncrement(),numbers,operationParam);
-        }
-        return ArithmeticResult.generateErroredResult(this.counter.getAndIncrement(),this.errors);
+
+
+        return this.calculatorService.applyOperationTo(counter.incrementAndGet(),values,operationParam);
     }
-
-    private List<Double> verify(List<String> values){
-        List<Double> numbers = new ArrayList<>();
-        try{
-            for (String value: values){
-                double number = Double.parseDouble(value);
-                numbers.add(number);
-            }
-        } catch (NumberFormatException e){
-            String err = "Sorry, we couldn't find a valid numerical representation " + e.getMessage().toLowerCase();
-            LOGGER.error(err);
-            this.errors.add(err);
-        }
-        if(numbers.isEmpty()){
-            this.errors.add("No values to operate on. Try adding values like /calculator/add?val=1&val=2");
-        }
-        return numbers;
-    }
-
 
 }

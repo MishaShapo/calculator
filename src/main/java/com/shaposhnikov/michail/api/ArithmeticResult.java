@@ -1,6 +1,8 @@
 package com.shaposhnikov.michail.api;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.shaposhnikov.michail.core.CalculatorOperation;
+import com.shaposhnikov.michail.core.VerifiedValues;
 import org.hibernate.validator.constraints.NotBlank;
 
 import java.util.Arrays;
@@ -34,12 +36,28 @@ public class ArithmeticResult {
         return new ArithmeticResult(id,errors);
     }
 
-    public static ArithmeticResult createResult(long id, double result) {
-        return new ArithmeticResult(id,result);
-    }
-
     public static ArithmeticResult generateErroredResult(long id, List<String> errors) {
         return new ArithmeticResult(id,errors);
+    }
+
+    public static ArithmeticResult create(long id, VerifiedValues numbers, String operation) {
+        if(numbers.hasErrors()){
+            return ArithmeticResult.generateErroredResult(id, numbers.getErrors());
+        }
+
+        CalculatorOperation calculatorOperation = CalculatorOperation.valueOf(operation.toUpperCase());
+        List<Double> nums = numbers.getNumbers();
+        boolean verified = calculatorOperation.verify(nums);
+        if(verified){
+            try{
+                double result = calculatorOperation.operate(nums);
+                return new ArithmeticResult(id,result);
+            } catch (Exception e){
+                return ArithmeticResult.generateErroredResult(id, calculatorOperation.getOperationError());
+            }
+        }
+        return ArithmeticResult.generateErroredResult(id, calculatorOperation.getVerificationError());
+
     }
 
     @JsonProperty
